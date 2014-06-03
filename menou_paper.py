@@ -4,9 +4,9 @@ import numpy as np
 
 
 # Extension of the omega domain and the k domain
-nOmega = 20
+nOmega = 10
 ndOmega = nOmega
-nk = 20
+nk = 500
 
 # container for the results
 FGMs = np.zeros((nOmega*ndOmega, 3), dtype="float64")

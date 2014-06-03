@@ -57,7 +57,7 @@ def coeff (Omega, dlnOmegadlnr, k_R, k_Z):
     # u_theta = cos theta u_R - sin theta u_Z
 
     # precompute 1/gamma*rho * ...
-    A = ( 1/(gamma*rho) * (k_R/k_Z/np.cos(theta) - 1/np.sin(theta))**2 * N2 )
+    A = ( 1/(gamma*rho) * (k_R/k_Z/np.cos(theta) - 1/np.sin(theta))**2 * (-N2) )
 
     # precompute 
     #  1/R**3 D(R**4*Omega**2) = 2*R*Omega*(k_R/k_Z - 1)*dOmega/dr-4*Omega**2
@@ -186,4 +186,5 @@ def loop(FGMs, FGMs_index, nOmega=10, ndOmega=10, nk=30, scale="log"):
                    "{:02.2e}\tk_Z: {:02.2e}\n".format(max_k[0], max_k[1]))
     ext = (Omega_range[0]/OmegaSun, Omega_range[-1]/OmegaSun, 
            dlnOmegadlnr_range[0], dlnOmegadlnr_range[-1])
+    return ext
 
