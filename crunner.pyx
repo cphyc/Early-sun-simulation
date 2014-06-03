@@ -1,21 +1,23 @@
 #cython: cdivision=True
 #cython: boundscheck=False
 #cython: wraparound=False
+cimport cython
 import numpy as np
 cimport numpy as np
 from itertools import product
 import matplotlib.pyplot as plt
-from libcpp cimport bool
+from cpython cimport bool
 
 cdef bool verbose, debug
-
+ctypedef np.float64_t dbl
 verbose = False
-debug = False
-if debug:
-    import ipdb
 
 # constants 
-cdef double Rsun, OmegaSun, Rgas, g, nu, eta, xi, r, theta, R, gamma, rho, T, B_theta, v_a_theta, N2, pi
+cdef dbl Rsun, OmegaSun, Rgas, g, nu, eta, xi, r, theta, R, gamma, rho, T, B_theta, v_a_theta, N2, pi
+cdef public lmin, lmax
+def get_param ():
+    return lmin, lmax, OmegaSun
+
 pi = 3.1415926535897932384626433832795028841971693
 Rsun = 696342e5           # cm
 OmegaSun = 2.7e-6         # s⁻¹
@@ -38,17 +40,22 @@ v_a_theta = 0 #B_theta / np.sqrt(4*pi*rho)
                           # cm.s⁻¹
 N2 = 6e-6                 # s⁻²
 
+# k ranges
+lmax = Rgas*T/g           # cm
+lmin = 1e5                # cm
+
 cdef extern from "math.h":
-    double sin(double x)
-    double cos(double x)
+    dbl sin(dbl x)
+    dbl cos(dbl x)
 # dPdr = -11239.4975692057  # dyn.cm⁻³
 # drho_gammaPdr = 1.121153213
 
-cdef double [:] coeff (double Omega, double dlnOmegadlnr, double k_R, double k_Z):
+cdef np.ndarray coeff (dbl Omega, dbl dlnOmegadlnr, dbl k_R, dbl k_Z):
     ''' Compute the coefficients αi as given in Menou et al. 2004 and 
     return them as an array.
     '''
-    cdef double dOmegadr, k2, k4, k6, k8, k10
+    cdef dbl dOmegadr, k2, k4, k6, k8, k10, a0, a1, a2, a3, a4, a5
+    cdef np.ndarray[dbl, mode="c", ndim=1] ans
     # recover dOmegadr w/ dlnOmegadlnr = r/Omega*dOmegadr
     dOmegadr = dlnOmegadlnr * Omega/r
     # precompute powers of k
@@ -108,12 +115,16 @@ cdef double [:] coeff (double Omega, double dlnOmegadlnr, double k_R, double k_Z
            - ( (xi*eta**2*k6 + xi*k2*kva2 ) * B )
            - 4*Omega**2*kva2*xi*k2 )
 
-    if debug:
-        ipdb.set_trace()
+    ans = np.array([a0, a1, a2, a3, a4, a5])
+    return ans
 
-    return a0, a1, a2, a3, a4, a5
-
-cpdef double [:] loop(np.ndarray FGMs, np.ndarray FGMs_index, int nOmega=10, int ndOmega=10, int nk=30, str scale="log"):
+cdef np.ndarray[dbl, mode="c", ndim=2] _loop(
+    np.ndarray[dbl, mode="c", ndim=2] FGMs_index,
+    np.ndarray[dbl, mode="c", ndim=1] Omega_range,
+    np.ndarray[dbl, mode="c", ndim=1] dlnOmegadlnr_range,
+    np.ndarray[dbl, mode="c", ndim=1] k_range,
+    int om_b, int om_e,
+    int dom_b, int dom_e):
     ''' Compute the Fastest Growing Modes (FGMs) over the Ω,∂lnΩ/∂lnr
     space by exploring the k_R, k_Z space.
     The FGM is at a given (Ω, ∂lnΩ/∂lnr):
@@ -123,47 +134,17 @@ cpdef double [:] loop(np.ndarray FGMs, np.ndarray FGMs_index, int nOmega=10, int
     | α0 σ^5 + α1 σ^4 + α2 σ^3 + α3 σ^2 + α4 σ^1 + α5 = 0
     \ σFGM(Ω, ∂lnΩ/∂lnr) = max { σ_sol(k_R,k_Z) }
     '''
-
-    cdef double [:] Omega_range, dlnOmegadlnr_range, k_range
-    cdef double lmax, lmin, k_min, k_max, FGM, local_FGM
-    cdef double max_k_R, max_k_Z
+    cdef dbl k_min, k_max, FGM, local_FGM
+    cdef dbl max_k_R, max_k_Z
     cdef int a,b,c,d
-    cdef double Omega, dlnOmegadlnr, k_R, k_Z
-
-    Omega_range = [(31/(nOmega))*OmegaSun*x for x in range(nOmega)]
-    dlnOmegadlnr_range = [-2.5/(ndOmega)*x for x in range(ndOmega)]
-    # Omega_range = [(31*2/(nOmega))*OmegaSun*x for x in range(nOmega)]
-    # dlnOmegadlnr_range = [-2.5*2/(ndOmega)*x for x in range(ndOmega)]
-
-    # k ranges
-    lmax = Rgas*T/g          # cm
-    lmin = 1e5               # cm
-    k_min, k_max = 2*pi/lmax, 2*pi/lmin
-    
-    if scale=="linear" or scale=="lin":
-        # lin scale<<<<<<<<<<<<<<<<<<<<<
-        k_range = [2*pi/lmax + n/(1.0*nk)*(2*pi/lmin-2*pi/lmax) 
-                   for n in range(nk)]
-        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    elif scale=="log":    
-        # log scale ~~~~~~~~~~~~~~~~~~~~
-        alpha = np.power(k_max/k_min, 1/(nk-1))
-        k_range = [2*pi/lmax * alpha**n for n in range(nk)]
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    elif scale=="invert":
-        # 1/l scale ^^^^^^^^^^^^^^^^^^^^
-        l_range = [lmin + n/nk*(lmax-lmin) for n in range(nk)]
-        k_range = [2*pi/l for l in l_range]
-        # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    else : raise Exception("Invalid scale `%s`" % scale)
-
-    # add the k < 0 values
-    k_range += [-k for k in k_range]
+    cdef dbl Omega, dlnOmegadlnr, k_R, k_Z
+    cdef int nOmega = len(Omega_range)
+    cdef int ndOmega = len(dlnOmegadlnr_range)
+    cdef int nk = len(k_range)
 
     # iterate over the indexes of the Omega, dlnOmegadlnr ranges
-    for a in range(nOmega):
-      for b in range(ndOmega):
+    for a in range(om_b, om_e):
+      for b in range(dom_b, dom_e):
         FGM = 0
         Omega = Omega_range[a]
         dlnOmegadlnr = dlnOmegadlnr_range[b]
@@ -191,12 +172,9 @@ cpdef double [:] loop(np.ndarray FGMs, np.ndarray FGMs_index, int nOmega=10, int
                 if verbose:
                     print("# New FGM {}".format(FGM))
 
-            if debug and Omega > 0 and dlnOmegadlnr < 0:
-                ipdb.set_trace()
             if verbose:
                 print(Omega,dlnOmegadlnr, k_R, k_Z, "\t", local_FGM)
 
-        FGMs[a+nOmega*b] = [dlnOmegadlnr, Omega, FGM]
         FGMs_index[a,b] = FGM/OmegaSun
 
         if verbose:
@@ -205,7 +183,20 @@ cpdef double [:] loop(np.ndarray FGMs, np.ndarray FGMs_index, int nOmega=10, int
 
             print ("\t{:02.16e}\tk_R:".format(FGM)+
                    "{:02.2e}\tk_Z: {:02.2e}\n".format(max_k_R, max_k_Z))
-    ext = (Omega_range[0]/OmegaSun, Omega_range[nOmega-1]/OmegaSun, 
-           dlnOmegadlnr_range[0], dlnOmegadlnr_range[ndOmega-1])
-    return ext
+    return FGMs_index
 
+def loop(list arg):
+    # Unpack the parameters
+    ( Omega_range, dlnOmegadlnr_range,
+        k_range, om_b, om_e, dom_b, dom_e ) = arg
+    
+    # Create a receipter for the result
+    FGMs_index = np.zeros((len(Omega_range),len(dlnOmegadlnr_range)))
+    
+    # Call the C _loop function
+    return _loop(FGMs_index,
+                 Omega_range,
+                 dlnOmegadlnr_range,
+                 k_range,                
+                 om_b, om_e,
+                 dom_b, dom_e)
