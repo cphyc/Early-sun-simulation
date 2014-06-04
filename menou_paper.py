@@ -1,11 +1,15 @@
 import matplotlib.pyplot as plt
-from crunner import loop, get_param
+try:
+    from crunner import loop, get_param
+except:
+    from runner import loop, get_param
+    
 import numpy as np
 try:
-    raise Exception()
     from multiprocessing import Pool
     multiproc = 4
     pool = Pool(processes=multiproc)
+    print ("Using %d processors" % multiproc)
 except:
     multiproc = False
     
@@ -13,7 +17,7 @@ from itertools import product
 
 # Extension of the omega domain and the k domain
 nk = 10
-nOmega = 5
+nOmega = 10
 ndOmega = nOmega
 
 # logarithmic scale for k
@@ -63,9 +67,7 @@ else:
 
 FGMs_index = np.zeros((nOmega,ndOmega))
 for res in results:
-    FGMs_index += res
-print (FGMs_index)
-    
+    FGMs_index += res    
 
 # ext = np.array([Omega_range[0]/OmegaSun, Omega_range[nOmega-1]/OmegaSun, 
 #                 dlnOmegadlnr_range[0], dlnOmegadlnr_range[ndOmega-1]])
@@ -82,3 +84,10 @@ print (FGMs_index)
 # plt.title("$\sigma_{FGM}$ in the $\Omega$, $\partial\log\Omega / \partial r$"+
 #           "space")
 # plt.show()
+
+try:
+    import cpickle as pickle
+except:
+    import pickle
+
+pickle.dump(FGMs_index, open("dump", "bw"))
