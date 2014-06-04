@@ -1,13 +1,15 @@
 import matplotlib.pyplot as plt
 try:
     from crunner import loop, get_param
+    print("Using Cython version")
 except:
     from runner import loop, get_param
+    print("Using Python version")
     
 import numpy as np
 try:
     from multiprocessing import Pool
-    multiproc = 4
+    multiproc = 16
     pool = Pool(processes=multiproc)
     print ("Using %d processors" % multiproc)
 except:
