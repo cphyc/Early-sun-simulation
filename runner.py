@@ -1,6 +1,5 @@
 import numpy as np
-import numpy.cos as cos
-import numpy.sin as sin
+from numpy import cos, sin
 from itertools import product
 
 verbose = False
@@ -116,6 +115,7 @@ def  _loop(FGMs_index, Omega_range, dlnOmegadlnr_range, k_range,
     | α0 σ^5 + α1 σ^4 + α2 σ^3 + α3 σ^2 + α4 σ^1 + α5 = 0
     \ σFGM(Ω, ∂lnΩ/∂lnr) = max { σ_sol(k_R,k_Z) }
     '''
+    nk = len(k_range)
     # iterate over the indexes of the Omega, dlnOmegadlnr ranges
     for a in range(om_b, om_e):
       for b in range(dom_b, dom_e):
@@ -159,7 +159,7 @@ def  _loop(FGMs_index, Omega_range, dlnOmegadlnr_range, k_range,
                    "{:02.2e}\tk_Z: {:02.2e}\n".format(max_k_R, max_k_Z))
     return FGMs_index
 
-def loop(list arg):
+def loop(arg):
     # Unpack the parameters
     ( Omega_range, dlnOmegadlnr_range,
         k_range, om_b, om_e, dom_b, dom_e ) = arg
