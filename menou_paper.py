@@ -9,30 +9,38 @@ import numpy as np
 import sys
 try:
     from multiprocessing import Pool
-    multiproc = int(sys.argv[1])
-    pool = Pool(processes=multiproc)
-    print ("Using %d processors" % multiproc)
+    nprocess = int(sys.argv[1])
+    pool = Pool(processes=nprocess)
+    print ("Using %d processors" % nprocess)
 except:
-    multiproc = False
+    nprocess = 0
     
-from itertools import product8
+from itertools import product
 	
 import signal
 import sys
 
-def join_and_dump(results,FGMS_index):
+def join_and_dump(results, FGMs_index, last, nprocess):
     for res in results:
         FGMs_index += res    
     try:
         import cpickle as pickle
     except:
         import pickle
+    print("Dumping at %d with %d processor%s." % (last, nprocess, "s"*(nprocess>1)))
+    pickle.dump((last, nprocess, FGMs_index), open("dump", "bw"))
 
-    pickle.dump(FGMs_index, open("dump", "bw"))
+ 
+def pop_n(_in, n, first=0):
+    while first <= len(_in):
+        yield first, _in[first:][:n]
+        first += n
+    return StopIteration
 
+        
 # Extension of the omega domain and the k domain
-nk = 500
-nOmega = 200
+nk = 5
+nOmega = 25
 ndOmega = nOmega
 
 # logarithmic scale for k
@@ -47,25 +55,30 @@ k_range = np.array(k_range)
 Omega_range = np.array([31/nOmega*OmegaSun*i for i in range(nOmega)])
 dlnOmegadlnr_range = np.array([-2.5/ndOmega*i for i in range(ndOmega)])
 
-if multiproc:
-    params = []
-    # Create the list of parameters we want
-    for nom in range(nOmega//4 + 1):
-        for ndom in range(ndOmega//4 + 1):
-            om_b = 4*nom
-            om_e = min(om_b+4, nOmega)
-            dom_b= 4*ndom
-            dom_e= min(dom_b+4,ndOmega)
 
-            params.append( [Omega_range, dlnOmegadlnr_range,
-                            k_range, om_b, om_e, dom_b, dom_e] )
+FGMs_index = np.zeros((nOmega, ndOmega))
 
-    # Launch nprocess threads, dump and start again
-    for param_short in params[::multiproc]
-        results = pool.map(loop, param_short)
-        joind_and_dump(results, FGMs_index)
-else:
-    results = [loop([Omega_range, dlnOmegadlnr_range,
-                    k_range, 0, nOmega, 0, ndOmega])]
+print ("Simulation with %d processors" % nprocess)
+print ("k_range : {}\nOmega_range : {}\ndlnOmegadlnr_range : {}".format(k_range, Omega_range, dlnOmegadlnr_range))
+params = []
+# Create the list of parameters we want
+for nom in range(nOmega//4 + 1):
+    for ndom in range(ndOmega//4 + 1):
+        om_b = 4*nom
+        om_e = min(om_b+4, nOmega)
+        dom_b= 4*ndom
+        dom_e= min(dom_b+4,ndOmega)
 
-join_and_dump(results, FGMs_index)
+        params.append( [Omega_range, dlnOmegadlnr_range,
+                        k_range, om_b, om_e, dom_b, dom_e] )
+
+# Launch nprocess threads, dump and start again
+print("Looping'n'dumping ...")
+for last, next_params in pop_n(params, max(nprocess,1)):
+    if nprocess > 0:
+        results = pool.map(loop, next_params)
+    else:
+        results = [loop(p) for p in next_params]
+        
+    join_and_dump(results, FGMs_index, last, max(nprocess,1))
+print("Looped !")
