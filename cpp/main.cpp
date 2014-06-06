@@ -10,8 +10,8 @@ int main(){
   Simul s;
 
   // resolution
-  int nk = 5;
-  int nOmega = 5;
+  int nk = 500;
+  int nOmega = 2;
   int ndOmega = nOmega;
   double Omega_range[1000], dlnOmegadlnr_range[1000], k_range[1000];
   
@@ -22,7 +22,7 @@ int main(){
   for (int n = 0; n < nk; n++) {
     double tmp = kmin * pow(fact, n);
     k_range[n]    = tmp;
-    //    k_range[nk+n] = -tmp;
+    k_range[nk+n] = -tmp;
   }
 
   // Omega range and dlnOmegadlnr_range
