@@ -118,21 +118,15 @@ double get_FGM(double Omega, double dlnOmegadlnr) {
       kR = simul::k_range[c];
       kZ = simul::k_range[d];
 
-      coeff(Omega ,dlnOmegadlnr, kR, kZ, polynomial);
+      coeff(Omega, dlnOmegadlnr, kR, kZ, polynomial);
 
       // Calculate the order of the polynomial
       // by looping from the end and decreasing as much as necessary
       order = 5;
-      // for (int n = order; n >= 0; n--)  {
-      //   if (polynomial[n] == 0 ) 
-      //     order--;
-      //   else
-      //     break;
-      // }
 
       // Pass the polynomial to the rpoly function
       // result in zeror, zeroi
-      nroots = rpoly::rpoly(polynomial, order, zeror, zeroi, info);
+      nroots = rpoly(polynomial, order, zeror, zeroi, info);
             
       // local Fastest Growing Mode = biggest real value
       local_FGM = 0;
@@ -143,8 +137,6 @@ double get_FGM(double Omega, double dlnOmegadlnr) {
       // check whether we found a new absolute FGM
       if ( local_FGM > FGM ) {
 	FGM = local_FGM;
-	// max_kR = kR;
-	// max_kZ = kZ;
 
 	// Do some output if necessary
 	if (simul::vverbose) {

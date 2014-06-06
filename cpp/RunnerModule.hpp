@@ -13,3 +13,5 @@ void loop(arr FGMs, double Omega_range[], double dlnOmegadlnr_range[],
 
 void coeff(double Omega, double dlnOmegadlnr, double kR, double kZ,
 	   double ans[]);
+
+double get_FGM(double Omega, double dOmega);

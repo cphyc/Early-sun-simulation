@@ -1,55 +1,35 @@
 #include <iostream>
 #include "RunnerModule.hpp"
+#include "simul_constants.hpp"
 #include <cmath>
 
 int main(){
   // To store the results
-  arr FGMs;
-  
-  // To create all the parameters and get the methods (see RunnerModule.{hpp,cpp})
-  Simul s;
+  double FGMs[NOMEGA][NDOMEGA];
 
-  // resolution
-  int nk = 500;
-  int nOmega = 2;
-  int ndOmega = nOmega;
-  double Omega_range[1000], dlnOmegadlnr_range[1000], k_range[1000];
-  
+  // Set the ranges
   // logarithmic scale for k
-  double kmin = 2*s.pi/s.lmax;
-  double kmax = 2*s.pi/s.lmin;
-  double fact = pow(kmax/kmin, 1./(nk-1));
-  for (int n = 0; n < nk; n++) {
+  double kmin = 2*simul::pi/simul::lmax;
+  double kmax = 2*simul::pi/simul::lmin;
+  double fact = pow(kmax/kmin, 1./(NK-1));
+  for (int n = 0; n < NK; n++) {
     double tmp = kmin * pow(fact, n);
-    k_range[n]    = tmp;
-    k_range[nk+n] = -tmp;
+    simul::k_range[n]    = tmp;
+    simul::k_range[NK+n] = -tmp;
   }
 
   // Omega range and dlnOmegadlnr_range
-  for (int n = 0; n < nOmega; n++)
-    Omega_range[n] = 31./nOmega*s.OmegaSun*n;
-  for (int n = 0; n < ndOmega; n++)
-    dlnOmegadlnr_range[n] = -2.5/ndOmega*n;
+  for (int n = 0; n < NOMEGA; n++)
+    simul::Omega_range[n] = 31./NOMEGA*simul::OmegaSun*n;
+  for (int n = 0; n < NDOMEGA; n++)
+    simul::dlnOmegadlnr_range[n] = -2.5/NDOMEGA*n;
   
-  // // Put only zeros in FGMs
-  // for (int n1 = 0; n1 < N; n1++){
-  //   for (int n2 = 0; n2 < N; n2++){
-  //     FGMs[n1][n2] = 0;
-  //   }
-  // }
-  
-  // Actually do the simulation
-  s.loop(FGMs, Omega_range, dlnOmegadlnr_range, k_range,
-	 0, nOmega,
-	 0, ndOmega,
-	 nk);
-
-  // Print the output
-  std::cout << "# Printing out FGMs" << std::endl;
-  for (int n1 = 0; n1 < N; n1++){
-    for (int n2 = 0; n2 < N; n2++){
-      std::cout << FGMs[n1][n2] << "\t";
+  for (int i = 0; i < NOMEGA; i++) {
+    for (int j = 0; j < NOMEGA; j++) {
+      FGMs[i][j] = get_FGM(simul::Omega_range[i], simul::dlnOmegadlnr_range[j]);
+      std::cout << FGMs[i][j] << "\t";
     }
-    std::cout << std::endl;
+    std::cout << "\n";
   }
+
 }

@@ -18,9 +18,9 @@ void worker_code();
 /* Just print the FGM */
 void print_FGM(double FGM[NOMEGA][NDOMEGA]);
 
-int main(int argc, char *argv[]) {
-  int numprocs, rank;
 
+/* Calculte the ranges */
+void set_ranges() {
   // Set the ranges
   // logarithmic scale for k
   double kmin = 2*simul::pi/simul::lmax;
@@ -37,7 +37,11 @@ int main(int argc, char *argv[]) {
     simul::Omega_range[n] = 31./NOMEGA*simul::OmegaSun*n;
   for (int n = 0; n < NDOMEGA; n++)
     simul::dlnOmegadlnr_range[n] = -2.5/NDOMEGA*n;
+}
+int main(int argc, char *argv[]) {
+  int numprocs, rank;
 
+  set_ranges();
 
   MPI_Init(&argc, &argv);
   

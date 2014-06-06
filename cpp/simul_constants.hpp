@@ -2,7 +2,7 @@
 #define CONST_H
 
 #include <cmath>
-const int NOMEGA = 100, NDOMEGA = 100, NK = 100;
+const int NOMEGA = 10, NDOMEGA = 10, NK = 25;
 
 namespace simul {
   extern bool verbose, vverbose;
@@ -32,7 +32,7 @@ namespace simul {
   extern double lmax;
   extern double lmin;
 
-  extern double k_range[NK];
+  extern double k_range[2*NK];
   extern double Omega_range[NOMEGA];
   extern double dlnOmegadlnr_range[NDOMEGA];
 };

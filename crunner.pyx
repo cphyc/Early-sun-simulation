@@ -1,20 +1,11 @@
-#cython: cdivision=True
-#cython: boundscheck=False
-#cython: wraparound=False
-cimport cython
 import numpy as np
-cimport numpy as np
+import numpy.cos as cos
+import numpy.sin as sin
 from itertools import product
-import matplotlib.pyplot as plt
-from cpython cimport bool
 
-cdef bool verbose, debug
-ctypedef np.float64_t dbl
 verbose = False
 
 # constants 
-cdef dbl Rsun, OmegaSun, Rgas, g, nu, eta, xi, r, theta, R, gamma, rho, T, B_theta, v_a_theta, N2, pi
-cdef public lmin, lmax
 def get_param ():
     return lmin, lmax, OmegaSun
 
@@ -44,18 +35,13 @@ N2 = 6e-6                 # s⁻²
 lmax = Rgas*T/g           # cm
 lmin = 1e5                # cm
 
-cdef extern from "math.h":
-    dbl sin(dbl x)
-    dbl cos(dbl x)
 # dPdr = -11239.4975692057  # dyn.cm⁻³
 # drho_gammaPdr = 1.121153213
 
-cdef np.ndarray coeff (dbl Omega, dbl dlnOmegadlnr, dbl k_R, dbl k_Z):
+def  coeff (Omega, dlnOmegadlnr, k_R, k_Z):
     ''' Compute the coefficients αi as given in Menou et al. 2004 and 
     return them as an array.
     '''
-    cdef dbl dOmegadr, k2, k4, k6, k8, k10, a0, a1, a2, a3, a4, a5
-    cdef np.ndarray[dbl, mode="c", ndim=1] ans
     # recover dOmegadr w/ dlnOmegadlnr = r/Omega*dOmegadr
     dOmegadr = dlnOmegadlnr * Omega/r
     # precompute powers of k
@@ -118,13 +104,9 @@ cdef np.ndarray coeff (dbl Omega, dbl dlnOmegadlnr, dbl k_R, dbl k_Z):
     ans = np.array([a0, a1, a2, a3, a4, a5])
     return ans
 
-cdef np.ndarray[dbl, mode="c", ndim=2] _loop(
-    np.ndarray[dbl, mode="c", ndim=2] FGMs_index,
-    np.ndarray[dbl, mode="c", ndim=1] Omega_range,
-    np.ndarray[dbl, mode="c", ndim=1] dlnOmegadlnr_range,
-    np.ndarray[dbl, mode="c", ndim=1] k_range,
-    int om_b, int om_e,
-    int dom_b, int dom_e):
+cdef  _loop(FGMs_index, Omega_range, dlnOmegadlnr_range, k_range,
+			om_b, om_e,
+			dom_b, dom_e):
     ''' Compute the Fastest Growing Modes (FGMs) over the Ω,∂lnΩ/∂lnr
     space by exploring the k_R, k_Z space.
     The FGM is at a given (Ω, ∂lnΩ/∂lnr):
@@ -134,14 +116,6 @@ cdef np.ndarray[dbl, mode="c", ndim=2] _loop(
     | α0 σ^5 + α1 σ^4 + α2 σ^3 + α3 σ^2 + α4 σ^1 + α5 = 0
     \ σFGM(Ω, ∂lnΩ/∂lnr) = max { σ_sol(k_R,k_Z) }
     '''
-    cdef dbl k_min, k_max, FGM, local_FGM
-    cdef dbl max_k_R, max_k_Z
-    cdef int a,b,c,d
-    cdef dbl Omega, dlnOmegadlnr, k_R, k_Z
-    cdef int nOmega = len(Omega_range)
-    cdef int ndOmega = len(dlnOmegadlnr_range)
-    cdef int nk = len(k_range)
-
     # iterate over the indexes of the Omega, dlnOmegadlnr ranges
     for a in range(om_b, om_e):
       for b in range(dom_b, dom_e):

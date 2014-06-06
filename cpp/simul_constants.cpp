@@ -29,7 +29,7 @@ namespace simul {
   double lmax = Rgas*T/g;            //  cm
   double lmin = 1e5;                 //  cm
 
-  double k_range[NK];
+  double k_range[2*NK];
   double Omega_range[NOMEGA];
   double dlnOmegadlnr_range[NDOMEGA];
 }
