@@ -1,4 +1,5 @@
 try:
+    raise Exception
     from crunner import loop, get_param
     print("Using Cython version")
 except:
@@ -39,15 +40,16 @@ def pop_n(_in, n, first=0):
 
         
 # Extension of the omega domain and the k domain
-nk = 5
-nOmega = 25
+nk = 50
+nOmega = 5
 ndOmega = nOmega
 
 # logarithmic scale for k
 lmin, lmax, OmegaSun = get_param()
-l_range = [lmin + n/nk*(lmax-lmin) for n in range(nk)]
-k_range = [2*np.pi/l for l in l_range]
-k_range += [-k for k in k_range]
+kmin, kmax = 2*np.pi/lmax, 2*np.pi/lmin
+fact = pow(kmax/kmin, 1/(nk-1))
+k_range = [ kmin * fact**n for n in range(nk)]
+#k_range += [-k for k in k_range]
 
 k_range = np.array(k_range)
 
@@ -81,4 +83,5 @@ for last, next_params in pop_n(params, max(nprocess,1)):
         results = [loop(p) for p in next_params]
         
     join_and_dump(results, FGMs_index, last, max(nprocess,1))
+                  
 print("Looped !")
