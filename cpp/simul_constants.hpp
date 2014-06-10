@@ -2,7 +2,7 @@
 #define CONST_H
 
 #include <cmath>
-const int NOMEGA = 10, NDOMEGA = 10, NK = 25;
+const int NOMEGA = 500, NDOMEGA = 500, NK = 500;
 
 namespace simul {
   extern bool verbose, vverbose;

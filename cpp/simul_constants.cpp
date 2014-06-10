@@ -12,7 +12,7 @@ namespace simul {
 
   // set the parameters :
   double nu = 15;                    //  cm².s⁻¹
-  double eta = 0;                    //  cm².s⁻¹
+  double eta = 496;                    //  cm².s⁻¹
   double xi = 4e6;                   //  cm².s⁻¹
   double r = 0.7*Rsun;               //  cm
   double theta = pi/4;               //  rad
@@ -20,9 +20,10 @@ namespace simul {
   double gamma = 5/3;                //  
   double rho = 0.4;                  //  g.cm⁻³
   double T = 2.6e6;                  //  K
-  double B_theta = 0;                //  Gauss (cgs)
-  double v_a_theta = 0;              // B_theta / np.sqrt(4*pi*rho)
-  //  cm.s⁻¹
+  double B_theta = 4;                //  Gauss (cgs)
+  double v_a_theta = B_theta/sqrt(4*pi*rho);
+                                     // B_theta / np.sqrt(4*pi*rho)
+                                     //  cm.s⁻¹
   double N2 = 6e-6;                  //  s⁻²
 
   // k ranges
