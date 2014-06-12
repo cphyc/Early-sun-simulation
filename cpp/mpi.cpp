@@ -75,7 +75,7 @@ void manager_code(int numprocs){
   double ret[NDOMEGA];
   
   // number of jobs to launch
-  int njobs = min(numprocs, NOMEGA) -1;
+  int njobs = min(numprocs - 1, NOMEGA);
 
   // Send a first row
   printf("M : %d job%s\n", njobs, (njobs > 1)? "s" : "");
