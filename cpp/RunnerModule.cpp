@@ -46,7 +46,7 @@ void coeff(double Omega, double dlnOmegadlnr, double kR, double kZ,
   // precompute (k * v_a)pow(,2) and its powers
   // k v_a = ksimul::theta * Bsimul::theta / 4pirho
   //       = Bsimul::theta / ... * (kR cos simul::theta - kZ sin simul::theta)
-  kva2 = simul::v_a_theta * (kR*cos(simul::theta) - kZ*sin(simul::theta));
+  kva2 = pow(simul::v_a_theta * (kR*cos(simul::theta) - kZ*sin(simul::theta)), 2);
   kva4 = pow(kva2,2);
 
   // compute the coefficients
@@ -76,7 +76,7 @@ void coeff(double Omega, double dlnOmegadlnr, double kR, double kZ,
 	 - ( (simul::xi*pow(simul::eta,2)*k6 + simul::xi*k2*kva2 ) * B )
 	 - 4*pow(Omega,2)*kva2*simul::xi*k2 );
 }
-
+ 
 
 
 // Loop between Omega_range[om_b] & Omega_range[om_t] 
