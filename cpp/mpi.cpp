@@ -43,7 +43,7 @@ void set_ranges() {
   for (int n = 0; n < NOMEGA; n++)
     simul::Omega_range[n] = 31./NOMEGA*simul::OmegaSun*n;
   for (int n = 0; n < NDOMEGA; n++)
-    simul::dlnOmegadlnr_range[n] = -2.5/NDOMEGA*n;
+    simul::dlnOmegadlnr_range[n] = -5./NDOMEGA*n;
 }
 
 int main(int argc, char *argv[]) {
@@ -138,6 +138,7 @@ void manager_code(int numprocs){
   }
   printf("M : Printing out the total answer\n");
   print_FGM(FGM);
+  return;
 }
 
 
