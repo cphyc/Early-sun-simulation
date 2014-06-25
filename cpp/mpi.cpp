@@ -100,7 +100,7 @@ void manager_code(int numprocs){
   
   i=1;
   while (i <= njobs && next_pos()) {
-    printf("M : sending first instructions to %d with %d-%d...", i,
+    printf("M : sending first instructions to %d with %d-%d...\n", i,
 	   posOmega, posdOmega);
     // Instructions = indexes of Omega, dOmega
     ins[0] = posOmega;
@@ -112,7 +112,6 @@ void manager_code(int numprocs){
 	     i,                 // worker #i
 	     CONTINUE,          // continue
 	     MPI_COMM_WORLD);   // communicator
-    printf(" sent!\n");
     i++;
   }
   
