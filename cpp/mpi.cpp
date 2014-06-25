@@ -7,6 +7,10 @@
 #define MANAGER 0
 // SHIFT is used to communicate between the worker and the manager
 #define SHIFT 12
+
+// verbose 1 : output everything, 2  %
+int verbosity = 2;
+
 // output array !
 double FGM[NOMEGA][NDOMEGA];
 int posOmega = 0, posdOmega = -1; // First call to next_pos will set posdOmega->0
@@ -95,13 +99,15 @@ void manager_code(int numprocs){
   // number of jobs to launch
   int njobs = min(numprocs - 1, NOMEGA*NDOMEGA);
 
-  // Send a first row
-  printf("M : %d job%s\n", njobs, (njobs > 1)? "s" : "");
+  if (verbosity == 1)// Send a first row
+    printf("M : %d job%s\n", njobs, (njobs > 1)? "s" : "");
   
   i=1;
   while (i <= njobs && next_pos()) {
-    printf("M : sending first instructions to %d with %d-%d...\n", i,
-	   posOmega, posdOmega);
+    if (verbosity == 1) {
+      printf("M : sending first instructions to %d with %d-%d...\n", i,
+	     posOmega, posdOmega);
+    }
     // Instructions = indexes of Omega, dOmega
     ins[0] = posOmega;
     ins[1] = posdOmega;
@@ -118,7 +124,8 @@ void manager_code(int numprocs){
   /* For all the elements in the matrix, get an answer and send a next one
      if available */
   for (int i = 0; i < NOMEGA*NDOMEGA; i++) {
-    printf("M : waiting for an answer ... ");
+    if (verbosity == 1)
+      printf("M : waiting for an answer ... ");
 
     MPI_Recv(&ret,
 	     1,
@@ -135,17 +142,26 @@ void manager_code(int numprocs){
     /* dom_index is on the first SHIFT bits on the right */
     dom_index_ret = status.MPI_TAG % ( 1 << SHIFT );
     
-    printf("got %d-%d from %d, storing it ... ", om_index_ret, dom_index_ret,
-	   sender);
+    if (verbosity == 1) {
+      printf("got %d-%d from %d, storing it ... ", om_index_ret, dom_index_ret,
+	     sender);
+    }
+    else if (verbosity == 2){ 
+      printf("%.2f%%", (NOMEGA*om_index_ret + dom_index_ret) * 100. / (NOMEGA*NDOMEGA));
+      std::cout << std::endl;
+    }
 
     /* Store the answer in our array */
     FGM[om_index_ret][dom_index_ret] = ret;
-    printf("stored. \n");
+    if (verbosity == 1)
+      printf("stored. \n");
 
     /* if next position is available, send it */
     if (next_pos()){
-      printf("M : sending instructions to %d with %d-%d ...", sender,
-	     posOmega, posdOmega);
+      if (verbosity == 1){
+	printf("M : sending instructions to %d with %d-%d ...", sender,
+	       posOmega, posdOmega);
+      }
 
       ins[0] = posOmega;
       ins[1] = posdOmega;
@@ -155,11 +171,13 @@ void manager_code(int numprocs){
 	       sender,
 	       CONTINUE,
 	       MPI_COMM_WORLD);
-      printf(" sent!\n");
+      if (verbosity == 1)
+	printf(" sent!\n");
     }
     /* No other works, tell the sender to stop by sending the tag -1*/
     else {
-      printf("M : No more work for %d :(.\n", sender);
+      if (verbosity == 1)
+	printf("M : No more work for %d :(.\n", sender);
       MPI_Send(MPI_BOTTOM,
 	       0,
 	       MPI_DOUBLE,
@@ -168,7 +186,9 @@ void manager_code(int numprocs){
 	       MPI_COMM_WORLD);
     }
   }
-  printf("M : Printing out the total answer\n");
+  if (verbosity == 1)
+    printf("M : Printing out the total answer\n");
+
   print_FGM(FGM);
   return;
 }
@@ -203,7 +223,8 @@ void worker_code(void) {
        growing mode at a given Omega by looping over dOmega */
     Omega  = simul::Omega_range[om_index];
     dOmega = simul::dlnOmegadlnr_range[dom_index];
-    printf("W%d: working on %d - %d (%e - %e)\n", rank, om_index, dom_index, Omega, dOmega);
+    if (verbosity == 1)
+      printf("W%d: working on %d - %d (%e - %e)\n", rank, om_index, dom_index, Omega, dOmega);
     
     FGM = get_FGM(Omega, dOmega);
 
