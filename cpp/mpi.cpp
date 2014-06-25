@@ -147,7 +147,7 @@ void manager_code(int numprocs){
 	     sender);
     }
     else if (verbosity == 2){ 
-      printf("%.2f%%", (NOMEGA*om_index_ret + dom_index_ret) * 100. / (NOMEGA*NDOMEGA));
+      printf("%.2f%%", (NOMEGA*posOmega + posdOmega) * 100. / (NOMEGA*NDOMEGA));
       std::cout << std::endl;
     }
 
