@@ -5,10 +5,11 @@
 #define CONTINUE 1
 #define STOP 0
 #define MANAGER 0
-
+// SHIFT is used to communicate between the worker and the manager
+#define SHIFT 12
 // output array !
 double FGM[NOMEGA][NDOMEGA];
-
+int posOmega = 0, posdOmega = -1; // First call to next_pos will set posdOmega->0
 
 inline int min(int x, int y) {
   return (x < y)? x : y;
@@ -46,6 +47,21 @@ void set_ranges() {
     simul::dlnOmegadlnr_range[n] = -5./NDOMEGA*n;
 }
 
+/* Modifies the position to the next position in the list and return True
+   or returns False if nothing possible anymore */
+bool next_pos() {
+  // Increment for dOmega ok ?
+  if (++posdOmega < NDOMEGA)
+    return true;
+  else {
+    posdOmega = 0;
+    if (++posOmega < NOMEGA)
+      return true;
+    else
+      return false;
+  }
+}
+
 int main(int argc, char *argv[]) {
   int numprocs, rank;
 
@@ -70,32 +86,43 @@ int main(int argc, char *argv[]) {
 
 void manager_code(int numprocs){
   MPI_Status status;
-  int om_index = 0;    // This is the index of the max Omega that is calculated
-  int om_index_ret, sender; // This is th
-  double ret[NDOMEGA];
+  int om_index_ret, sender; 
+  int dom_index_ret;
+  double ret;
+  int ins[2];
+  int i;
   
   // number of jobs to launch
-  int njobs = min(numprocs - 1, NOMEGA);
+  int njobs = min(numprocs - 1, NOMEGA*NDOMEGA);
 
   // Send a first row
   printf("M : %d job%s\n", njobs, (njobs > 1)? "s" : "");
-  for (int i = 1 ; i <= njobs ; i++) {
-    printf("M : sending first instructions to %d with omega index %d...", i, om_index);
-    MPI_Send(&om_index,                   // input
-	     1,                           // size
-	     MPI_INT,                     // type
-	     i,                           // worker #
-	     CONTINUE,                    // continue
-	     MPI_COMM_WORLD);             // communicator
-    printf(" sent!\n");
-    om_index++;
-  }
+  
+  i=1;
+  while (i <= njobs && next_pos()) {
+    printf("M : sending first instructions to %d with %d-%d...", i,
+	   posOmega, posdOmega);
+    // Instructions = indexes of Omega, dOmega
+    ins[0] = posOmega;
+    ins[1] = posdOmega;
 
-  for (int i = 0; i < NOMEGA; i++) {
+    MPI_Send(ins,               // input
+	     2,                 // size
+	     MPI_INT,           // type
+	     i,                 // worker #i
+	     CONTINUE,          // continue
+	     MPI_COMM_WORLD);   // communicator
+    printf(" sent!\n");
+    i++;
+  }
+  
+  /* For all the elements in the matrix, get an answer and send a next one
+     if available */
+  for (int i = 0; i < NOMEGA*NDOMEGA; i++) {
     printf("M : waiting for an answer ... ");
 
-    MPI_Recv(ret,
-	     NDOMEGA,
+    MPI_Recv(&ret,
+	     1,
 	     MPI_DOUBLE,
 	     MPI_ANY_SOURCE,
 	     MPI_ANY_TAG,
@@ -104,26 +131,32 @@ void manager_code(int numprocs){
 
     /* Fetch back the omega rank and the sender.*/
     sender  = status.MPI_SOURCE;
-    om_index_ret = status.MPI_TAG;
-
-    printf("got column %d from %d, storing it ... ", om_index_ret, sender);
+    /* om_index is in the first SHIFT bits on the left */
+    om_index_ret = status.MPI_TAG >> SHIFT;
+    /* dom_index is on the first SHIFT bits on the right */
+    dom_index_ret = status.MPI_TAG % ( 1 << SHIFT );
+    
+    printf("got %d-%d from %d, storing it ... ", om_index_ret, dom_index_ret,
+	   sender);
 
     /* Store the answer in our array */
-    for (int dom_index = 0; dom_index < NDOMEGA; dom_index++) {
-      FGM[om_index_ret][dom_index] = ret[dom_index];
-    }
+    FGM[om_index_ret][dom_index_ret] = ret;
     printf("stored. \n");
 
-    if (om_index < NOMEGA){
-      printf("M : sending instructions to %d with omega index %d ...", sender, om_index);
-      MPI_Send(&om_index,
-	       1,
+    /* if next position is available, send it */
+    if (next_pos()){
+      printf("M : sending instructions to %d with %d-%d ...", sender,
+	     posOmega, posdOmega);
+
+      ins[0] = posOmega;
+      ins[1] = posdOmega;
+      MPI_Send(ins,
+	       2,
 	       MPI_INT,
 	       sender,
 	       CONTINUE,
 	       MPI_COMM_WORLD);
       printf(" sent!\n");
-      om_index ++;
     }
     /* No other works, tell the sender to stop by sending the tag -1*/
     else {
@@ -146,46 +179,53 @@ void worker_code(void) {
   MPI_Status status;
   int rank;
   double Omega, dOmega;
-  double FGM_col[NDOMEGA];
-  int om_index;
+  double FGM;
+  int om_index, dom_index;
+  int index[2];
+  unsigned int flag;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
   /* Get a new command from 0 with a null (0) tag. The size of the
      input in NDOMEGA, the last one being Omega*/
 
-  MPI_Recv(&om_index,
-	   1,
+  MPI_Recv(index,
+	   2,
 	   MPI_INT,
 	   MANAGER,
 	   MPI_ANY_TAG, 
 	   MPI_COMM_WORLD, &status);
     
   while (status.MPI_TAG == CONTINUE) {
-    printf("W%d: working on column %d\n", rank, om_index);
+    om_index = index[0];
+    dom_index = index[1];
       
     /* Call the get_FGM function that finds the fastest 
        growing mode at a given Omega by looping over dOmega */
-    for (int i = 0; i < NDOMEGA; i++) {
-      Omega  = simul::Omega_range[om_index];
-      dOmega = simul::dlnOmegadlnr_range[i];
+    Omega  = simul::Omega_range[om_index];
+    dOmega = simul::dlnOmegadlnr_range[dom_index];
+    printf("W%d: working on %d - %d (%e - %e)\n", rank, om_index, dom_index, Omega, dOmega);
+    
+    FGM = get_FGM(Omega, dOmega);
 
-      FGM_col[i] = get_FGM(Omega, dOmega);
+    /* l-t-r :  SHIFT bits for om_index _  SHIFT bits for dom_index
+       ex : nOmega = 5, ndOmega = 10, SHIFT = 8
+       
+       flag = 00000101 00001010
+            =   5*2^8 +      10   */
+    flag = (om_index << SHIFT) | dom_index;
 
-      printf("W%d: working on %e, %e\n", rank, Omega, dOmega);
-    }
-      
     /* Send the answer (42) to 0 with the Omega_rank.*/
-    MPI_Send(FGM_col,
-	     NDOMEGA,
+    MPI_Send(&FGM,
+	     1,
 	     MPI_DOUBLE,
 	     MANAGER,
-	     om_index,
+	     flag,
 	     MPI_COMM_WORLD);
 
     /* Get a new job */
-    MPI_Recv(&om_index,
-	     1,
+    MPI_Recv(index,
+	     2,
 	     MPI_INT,
 	     MANAGER,
 	     MPI_ANY_TAG, 
