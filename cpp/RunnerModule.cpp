@@ -86,6 +86,8 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[], double dlnOmegadln
 	  int dom_b, int dom_e, int nk) {
   
   double Omega, dlnOmegadlnr;
+  double kR, kZ;
+  double ret[3];
   // Iterate over all Omega, dlnOmega couples
   for (int a = om_b; a < om_e; a++) {
     for (int b = dom_b; b < dom_e; b++) {
@@ -94,20 +96,26 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[], double dlnOmegadln
       // max_kR = 0;
       // max_kZ = 0;
 
-      FGMs[a][b] = get_FGM(Omega, dlnOmegadlnr);
+      get_FGM(Omega, dlnOmegadlnr, ret);
+      FGMs[a][b] = ret[0];
+      kR = ret[1];
+      kZ = ret[2];
+      
 
       if (simul::verbose) {
 	std::cout << Omega << "\t" <<  dlnOmegadlnr 
-		  << "\t" << FGMs[a][b] << std::endl;
+		  << "\t" << FGMs[a][b] << "\t"
+		  << "\t" << kR << "\t" << kZ << std::endl;
       }
     }
   }
 }
 
 
-double get_FGM(double Omega, double dlnOmegadlnr) {
+void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
   double local_FGM = 0, FGM = 0;
   double kR, kZ;
+  double kR_FGM_tmp, kZ_FGM_tmp;
   double polynomial[6];
   int order, nroots;
   double zeroi[5], zeror[5];
@@ -134,9 +142,11 @@ double get_FGM(double Omega, double dlnOmegadlnr) {
 	local_FGM = max(local_FGM, zeror[n]);
       }
 	  
-      // check whether we found a new absolute FGM
+      // if a bigger FGM, save infos
       if ( local_FGM > FGM ) {
 	FGM = local_FGM;
+	kR_FGM_tmp = kR;
+	kZ_FGM_tmp = kZ;
 
 	// Do some output if necessary
 	if (simul::vverbose) {
@@ -149,5 +159,8 @@ double get_FGM(double Omega, double dlnOmegadlnr) {
       }
     }
   }
-  return FGM;
+  ret[0] = FGM;
+  ret[1] = kR_FGM_tmp;
+  ret[2] = kZ_FGM_tmp;
+
 }

@@ -11,9 +11,14 @@
 // verbose 1 : output everything, 2  %
 int verbosity = 2;
 
-// output array !
+// output arrays !
 double FGM[NOMEGA][NDOMEGA];
-int posOmega = 0, posdOmega = -1; // First call to next_pos will set posdOmega->0
+double kR_FGM[NOMEGA][NDOMEGA];
+double kZ_FGM[NOMEGA][NDOMEGA];
+
+// First call to next_pos will set posdOmega->0
+int posOmega = 0, posdOmega = -1; 
+
 
 inline int min(int x, int y) {
   return (x < y)? x : y;
@@ -28,7 +33,7 @@ void manager_code(int numprocs);
 void worker_code();
 
 /* Just print the FGM */
-void print_FGM(double FGM[NOMEGA][NDOMEGA]);
+void print_array(double FGM[NOMEGA][NDOMEGA]);
 
 
 /* Calculte the ranges */
@@ -92,7 +97,7 @@ void manager_code(int numprocs){
   MPI_Status status;
   int om_index_ret, sender; 
   int dom_index_ret;
-  double ret;
+  double ret[3];
   int ins[2];
   int i;
   
@@ -127,8 +132,8 @@ void manager_code(int numprocs){
     if (verbosity == 1)
       printf("M : waiting for an answer ... ");
 
-    MPI_Recv(&ret,
-	     1,
+    MPI_Recv(ret,
+	     3,
 	     MPI_DOUBLE,
 	     MPI_ANY_SOURCE,
 	     MPI_ANY_TAG,
@@ -152,7 +157,10 @@ void manager_code(int numprocs){
     }
 
     /* Store the answer in our array */
-    FGM[om_index_ret][dom_index_ret] = ret;
+    FGM[om_index_ret][dom_index_ret] = ret[0];
+    kR_FGM[om_index_ret][dom_index_ret] = ret[1];
+    kZ_FGM[om_index_ret][dom_index_ret] = ret[2];
+
     if (verbosity == 1)
       printf("stored. \n");
 
@@ -189,7 +197,9 @@ void manager_code(int numprocs){
   if (verbosity == 1)
     printf("M : Printing out the total answer\n");
 
-  print_FGM(FGM);
+  print_array(FGM);
+  print_array(kR_FGM);
+  print_array(kZ_FGM);
   return;
 }
 
@@ -202,6 +212,7 @@ void worker_code(void) {
   int om_index, dom_index;
   int index[2];
   unsigned int flag;
+  double ret[3];
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
@@ -226,7 +237,7 @@ void worker_code(void) {
     if (verbosity == 1)
       printf("W%d: working on %d - %d (%e - %e)\n", rank, om_index, dom_index, Omega, dOmega);
     
-    FGM = get_FGM(Omega, dOmega);
+    get_FGM(Omega, dOmega, ret);
 
     /* l-t-r :  SHIFT bits for om_index _  SHIFT bits for dom_index
        ex : nOmega = 5, ndOmega = 10, SHIFT = 8
@@ -236,8 +247,8 @@ void worker_code(void) {
     flag = (om_index << SHIFT) | dom_index;
 
     /* Send the answer (42) to 0 with the Omega_rank.*/
-    MPI_Send(&FGM,
-	     1,
+    MPI_Send(ret,
+	     3,
 	     MPI_DOUBLE,
 	     MANAGER,
 	     flag,
@@ -255,7 +266,7 @@ void worker_code(void) {
   return ;
 }
 
-void print_FGM(double FGM[NOMEGA][NDOMEGA]){
+void print_array(double FGM[NOMEGA][NDOMEGA]){
   for (int i = 0; i < NOMEGA; i++) {
     for (int j = 0; j < NDOMEGA; j++) {
       std::cout << FGM[i][j] << "\t";
