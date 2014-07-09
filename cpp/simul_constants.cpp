@@ -31,9 +31,11 @@ namespace simul {
   double H_pressure     = 3.79e-3*Rsun; //  cm
 
   // k ranges
-  // Either pressure scale height or Rgas*T/gx
-  double lmax = H_pressure;      //  cm
-  double lmin = 1e5;             //  cm
+  //double lmax = Rgas*T/g;            //  cm
+  //double lmin = 1e5;                 //  cm
+  double lmax = 1e-2*Rsun;
+  double lmin = 1e-14*Rsun;
+
 
   double k_range[2*NK];
   double Omega_range[NOMEGA];

@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <cmath>
 
@@ -11,11 +12,15 @@ double max(double a, double b) {
   else return b;
 }
 
-void coeff(double Omega, double dlnOmegadlnr, double kR, double kZ,
+void coeff(double Omega, double dlnOmegadlnr, double kr, double kthe,
 	   double ans[]){
 
   double dOmegadr, k2, k4, k6, k8, k10, A, B;
   double kva2, kva4;
+  double kR, kZ;
+
+  kR = sin(simul::theta)*kr - cos(simul::theta)*kthe;
+  kZ = cos(simul::theta)*kr + sin(simul::theta)*kthe;
 
   // recover dOmegadr w/ dlnOmegadlnr = r/Omega*dOmegadr
   dOmegadr = dlnOmegadlnr * Omega/simul::r;
@@ -86,26 +91,24 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[], double dlnOmegadln
 	  int dom_b, int dom_e, int nk) {
   
   double Omega, dlnOmegadlnr;
-  double kR, kZ;
+  double kr, kthe;
   double ret[3];
   // Iterate over all Omega, dlnOmega couples
   for (int a = om_b; a < om_e; a++) {
     for (int b = dom_b; b < dom_e; b++) {
       Omega = Omega_range[a];
       dlnOmegadlnr = dlnOmegadlnr_range[b];
-      // max_kR = 0;
-      // max_kZ = 0;
 
       get_FGM(Omega, dlnOmegadlnr, ret);
       FGMs[a][b] = ret[0];
-      kR = ret[1];
-      kZ = ret[2];
+      kr = ret[1];
+      kthe = ret[2];
       
 
       if (simul::verbose) {
 	std::cout << Omega << "\t" <<  dlnOmegadlnr 
 		  << "\t" << FGMs[a][b] << "\t"
-		  << "\t" << kR << "\t" << kZ << std::endl;
+		  << "\t" << kr << "\t" << kthe << std::endl;
       }
     }
   }
@@ -114,8 +117,8 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[], double dlnOmegadln
 
 void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
   double local_FGM = 0, FGM = 0;
-  double kR, kZ;
-  double kR_FGM_tmp, kZ_FGM_tmp;
+  double kr_FGM_tmp, kth_FGM_tmp;
+  double kr, kthe;
   double polynomial[6];
   int order, nroots;
   double zeroi[5], zeror[5];
@@ -123,10 +126,10 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
   // iterate over all k-couples
   for (int c = 0; c < 2*NK; c++) {
     for (int d = 0; d < 2*NK; d++) {
-      kR = simul::k_range[c];
-      kZ = simul::k_range[d];
+      kr   = simul::k_range[c];
+      kthe = simul::k_range[d];
 
-      coeff(Omega, dlnOmegadlnr, kR, kZ, polynomial);
+      coeff(Omega, dlnOmegadlnr, kr, kthe, polynomial);
 
       // Calculate the order of the polynomial
       // by looping from the end and decreasing as much as necessary
@@ -146,8 +149,8 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
       if ( local_FGM > FGM ) {
 	FGM = local_FGM;
 	// Please note that if FGM == 0, kR & kZ have no meaning.
-	kR_FGM_tmp = kR;
-	kZ_FGM_tmp = kZ;
+	kr_FGM_tmp = kr;
+	kthe_FGM_tmp = kthe;
 
 	// Do some output if necessary
 	if (simul::vverbose) {
@@ -156,12 +159,12 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
       }
       if (simul::vverbose) {
 	std::cout << Omega << "\t" << dlnOmegadlnr << "\t" <<
-	  kR << "\t" <<  kZ << "\t" << local_FGM << std::endl;
+	  kr << "\t" <<  kthe << "\t" << local_FGM << std::endl;
       }
     }
   }
   ret[0] = FGM;
-  ret[1] = kR_FGM_tmp;
-  ret[2] = kZ_FGM_tmp;
+  ret[1] = kr_FGM_tmp;
+  ret[2] = kthe_FGM_tmp;
 
 }
