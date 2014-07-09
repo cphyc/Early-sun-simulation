@@ -23,11 +23,11 @@ namespace simul {
   double gamma		= 1.63;         //  
   double rho		= 4.61e2;       //  g.cm⁻³
   double T		= 2.62e7;       //  K
-  double B_theta	= 4;            //  Gauss (cgs)
+  double B_theta	= 0;            //  Gauss (cgs)
   double v_a_theta      = B_theta/sqrt(4*pi*rho);
                                         // B_theta / np.sqrt(4*pi*rho)
                                         //  cm.s⁻¹
-  double N2             = 9.01e-3;      //  s⁻²
+  double N2             = 2.22e-2;      //  s⁻²
   double H_pressure     = 3.79e-3*Rsun; //  cm
 
   // k ranges

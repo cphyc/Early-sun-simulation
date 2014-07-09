@@ -145,6 +145,7 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
       // if a bigger FGM, save infos
       if ( local_FGM > FGM ) {
 	FGM = local_FGM;
+	// Please note that if FGM == 0, kR & kZ have no meaning.
 	kR_FGM_tmp = kR;
 	kZ_FGM_tmp = kZ;
 
