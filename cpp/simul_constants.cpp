@@ -56,7 +56,7 @@ namespace simul {
   // set the parameters :
   double nu = 15;                    //  cm².s⁻¹
   double eta = 496;                    //  cm².s⁻¹
-  double xi = 4e6;                   //  cm².s⁻¹
+  double xi = 4e6;                   //  cm².s⁻¹R
   double r = 0.7*Rsun;               //  cm
   double theta = pi/4;               //  rad
   double R = r*cos(theta);           //  cm

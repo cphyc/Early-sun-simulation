@@ -40,16 +40,16 @@ void coeff(double Omega, double dlnOmegadlnr, double kr, double kthe,
   // u_theta = cos theta u_R - sin theta u_Z
 
   // precompute 1/gamma*rho * ...
-  A = ( 1/(simul::gamma*simul::rho) * pow((kR/kZ/cos(simul::theta) - 1/sin(simul::theta)),2) * (-simul::N2) );
+  strat_term = -pow((kR/kZ*cos(simul::theta) - sin(simul::theta)),2) * simul::N2;
 
   // precompute 
   //  1/pow(R,3) D(pow(R,4)*pow(Omega,2)) = 2*simul::*Omega*(kR/kZ - 1)*dOmega/dr-4*pow(Omega,2)
-  B = ( 2 *simul::R*Omega* (kR/kZ/cos(simul::theta) - 1/sin(simul::theta)) * dOmegadr 
-	- 4*pow(Omega,2) );
+  rot_term = ( 2 *simul::R*Omega* (kR/kZ*cos(simul::theta) - sin(simul::theta)) * dOmegadr 
+	       - 4*pow(Omega,2) );
 
   // precompute (k * v_a)pow(,2) and its powers
-  // k v_a = ksimul::theta * Bsimul::theta / 4pirho
-  //       = Bsimul::theta / ... * (kR cos simul::theta - kZ sin simul::theta)
+  // k v_a = ktheta * Btheta / 4pirho
+  //       = Btheta / ... * (kR cos simul::theta - kZ sin simul::theta)
   kva2 = pow(simul::v_a_theta * (kR*cos(simul::theta) - kZ*sin(simul::theta)), 2);
   kva4 = pow(kva2,2);
 
@@ -59,25 +59,25 @@ void coeff(double Omega, double dlnOmegadlnr, double kr, double kthe,
   ans[2] = ( ans[0]*( k4*( pow(simul::nu,2) + pow(simul::eta,2) + 4*simul::nu*simul::eta + 
 		   2*simul::nu*simul::xi + 2*simul::eta*simul::xi )
 	      + 2*kva2)
-	 - A - B );
+	 - strat_term - rot_term );
 
   ans[3] = ( ans[0]*( ( 2*simul::eta*pow(simul::nu,2) + 2*simul::nu*pow(simul::eta,2) + pow(simul::nu,2)*simul::xi + pow(simul::eta,2)*simul::xi
 		+ 4*simul::nu*simul::eta*simul::xi ) * k6
 	      + 2*(simul::nu + simul::eta + simul::xi)*k2 * kva2 )
-	 - (2*simul::eta + simul::nu)*k2 * A
-	 - (2*simul::eta + simul::xi)*k2 * B );
+	 - (2*simul::eta + simul::nu)*k2 * strat_term
+	 - (2*simul::eta + simul::xi)*k2 * rot_term );
 
   ans[4] = ( ans[0]*( (2*simul::eta*simul::xi*pow(simul::nu,2) + 2*simul::nu*pow(simul::eta,2)*simul::xi + pow(simul::eta,2)*pow(simul::nu,2))*k8
 	      + 2*(simul::nu*simul::eta + simul::nu*simul::xi + simul::eta*simul::xi)*k4*kva2
 	      + kva4)
-	 - ( (2*simul::nu*simul::eta*k4 + pow(simul::eta,2)*k4 + kva2) * A )
-	 - ( (2*simul::eta*simul::xi*k4 + pow(simul::eta,2)*k4 + kva2) * B )
+	 - ( (2*simul::nu*simul::eta*k4 + pow(simul::eta,2)*k4 + kva2) * strat_term )
+	 - ( (2*simul::eta*simul::xi*k4 + pow(simul::eta,2)*k4 + kva2) * rot_term )
 	 - 4*pow(Omega,2)*kva2 );
 
   ans[5] = ( ans[0]*( simul::xi*pow(simul::eta,2)*pow(simul::nu,2)*k10 + 2*simul::xi*simul::nu*simul::eta*k6*kva2
 	      + simul::xi*k2*kva4 )
-	 - ( (simul::nu*pow(simul::eta,2)*k6 + simul::eta*k2*kva2) * A )
-	 - ( (simul::xi*pow(simul::eta,2)*k6 + simul::xi*k2*kva2 ) * B )
+	 - ( (simul::nu*pow(simul::eta,2)*k6 + simul::eta*k2*kva2) * strat_term )
+	 - ( (simul::xi*pow(simul::eta,2)*k6 + simul::xi*k2*kva2 ) * rot_term )
 	 - 4*pow(Omega,2)*kva2*simul::xi*k2 );
 }
  
