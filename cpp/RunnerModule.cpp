@@ -14,7 +14,7 @@ double max(double a, double b) {
 void coeff(double Omega, double dlnOmegadlnr, double kr, double kthe,
 	   double ans[]){
 
-  double dOmegadr, k2, k4, k6, k8, k10, A, B;
+  double dOmegadr, k2, k4, k6, k8, k10, strat_term, rot_term;
   double kva2, kva4;
   double kR, kZ;
 
