@@ -1,4 +1,4 @@
-CC=mpic++ -std=c++11 -lm -g
+CC=mpicxx -O3 -lm
 CFLAGS=-c -Wall
 LFLAGS=
 SOURCES=RunnerModule.cpp mpi.cpp simul_constants.cpp
