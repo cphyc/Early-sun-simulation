@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <cmath>
 
@@ -6,6 +5,7 @@
 #include "rpoly.cpp"
 #include "RunnerModule.hpp"
 #include "simul_constants.hpp"
+
 
 double max(double a, double b) {
   if (a > b) return a;
@@ -117,7 +117,7 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[], double dlnOmegadln
 
 void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
   double local_FGM = 0, FGM = 0;
-  double kr_FGM_tmp, kth_FGM_tmp;
+  double kr_FGM_tmp, kthe_FGM_tmp;
   double kr, kthe;
   double polynomial[6];
   int order, nroots;

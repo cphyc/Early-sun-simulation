@@ -1,8 +1,10 @@
 #ifndef CONST_H
 #define CONST_H
 
+#define USE_RG
+
 #include <cmath>
-const int NOMEGA = 100, NDOMEGA = 100, NK = 1000;
+const int NOMEGA = 10, NDOMEGA = 10, NK = 1000;
 
 namespace simul {
   extern bool verbose, vverbose;
@@ -36,4 +38,6 @@ namespace simul {
   extern double Omega_range[NOMEGA];
   extern double dlnOmegadlnr_range[NDOMEGA];
 };
+
 #endif
+
