@@ -1,9 +1,8 @@
 #ifndef CONST_H
 #define CONST_H
 
-#define USE_RG
-
 #include <cmath>
+
 const int NOMEGA = 10, NDOMEGA = 10, NK = 1000;
 
 namespace simul {

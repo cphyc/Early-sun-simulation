@@ -6,6 +6,11 @@
 #include "RunnerModule.hpp"
 #include "simul_constants.hpp"
 
+#ifdef USE_RG
+namespace simul = reg_giant;
+#else
+namespace simul = early_sun;
+#endif
 
 double max(double a, double b) {
   if (a > b) return a;
