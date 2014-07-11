@@ -133,6 +133,12 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
       // Calculate the order of the polynomial
       // by looping from the end and decreasing as much as necessary
       order = 5;
+      if (polynomial[5] == 0) {
+	order --;
+	if (polynomial[4] == 0) {
+	    order --;
+	  }
+      }
 
       // Pass the polynomial to the rpoly function
       // result in zeror, zeroi
