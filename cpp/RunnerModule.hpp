@@ -13,4 +13,5 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[],
 void coeff(double Omega, double dlnOmegadlnr, double kR, double kZ,
 	   double ans[]);
 
+// Returns the results in ret := [FGM, kr, kthe]
 void get_FGM(double Omega, double dOmega, double* ret);
