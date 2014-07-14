@@ -5,7 +5,7 @@
 #include "rpoly.cpp"
 #include "RunnerModule.hpp"
 #include "simul_constants.hpp"
-bool verbose_coeffs = true;
+bool verbose_coeffs = false;
 double max(double a, double b) {
   if (a > b) return a;
   else return b;
@@ -13,14 +13,12 @@ double max(double a, double b) {
 
 void coeff(double Omega, double dlnOmegadlnr, double kr, double kthe,
 	   double ans[]){
-
-  double dOmegadr;
   double k2, k4, k6, k8, k10, strat_term, rot_term;
   double kva2, kva4;
   double kR, kZ;
 
-  kR = sin(simul::theta)*kr - cos(simul::theta)*kthe;
-  kZ = cos(simul::theta)*kr + sin(simul::theta)*kthe;
+  kR = sin(simul::theta)*kr + cos(simul::theta)*kthe/simul::r;
+  kZ = cos(simul::theta)*kr - sin(simul::theta)*kthe/simul::r;
 
   // recover dOmegadr w/ dlnOmegadlnr = r/Omega*dOmegadr
   // dOmegadr = dlnOmegadlnr * Omega/simul::r;
@@ -110,9 +108,9 @@ void coeff(double Omega, double dlnOmegadlnr, double kr, double kthe,
 	     - 4*pow(Omega,2)*kva2*simul::xi*k2 );
 
   if (verbose_coeffs) {
-    printf("%e\t%e\t", kr, kthe);
-    for (int i = 4; i >=0 ; i --)
-      printf("%e\t", ans[i]);
+    printf("%2.5e\t%2.5e\t", kr, kthe);
+    for (int i = 5; i >=0 ; i --)
+      printf("%2.5e\t", ans[i]);
     std::cout << std::endl;
   }
 }
@@ -131,13 +129,13 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[], double dlnOmegadln
   // Iterate over all Omega, dlnOmega couples
   for (int a = om_b; a < om_e; a++) {
     for (int b = dom_b; b < dom_e; b++) {
-      Omega = Omega_range[a];
+      Omega        = Omega_range[a];
       dlnOmegadlnr = dlnOmegadlnr_range[b];
 
       get_FGM(Omega, dlnOmegadlnr, ret);
       FGMs[a][b] = ret[0];
-      kr = ret[1];
-      kthe = ret[2];
+      kr         = ret[1];
+      kthe       = ret[2];
       
 
       if (simul::verbose) {
@@ -169,12 +167,12 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
       // Calculate the order of the polynomial
       // by looping from the end and decreasing as much as necessary
       order = 5;
-      if (polynomial[5] == 0) {
-	order --;
-	if (polynomial[4] == 0) {
-	    order --;
-	  }
-      }
+      // if (polynomial[5] == 0) {
+      // 	order --;
+      // 	if (polynomial[4] == 0) {
+      // 	    order --;
+      // 	  }
+      // }
 
       // Pass the polynomial to the rpoly function
       // result in zeror, zeroi
@@ -182,7 +180,7 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
             
       // local Fastest Growing Mode = biggest real value
       local_FGM = 0;
-      for (int n = 0; n < nroots; n++) {
+      for (int n = 0; n < 5; n++) {
 	local_FGM = max(local_FGM, zeror[n]);
       }
 	  
@@ -190,7 +188,7 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
       if ( local_FGM > FGM ) {
 	FGM = local_FGM;
 	// Please note that if FGM == 0, kR & kZ have no meaning.
-	kr_FGM_tmp = kr;
+	kr_FGM_tmp   = kr;
 	kthe_FGM_tmp = kthe;
 
 	// Do some output if necessary
@@ -207,5 +205,5 @@ void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
   ret[0] = FGM;
   ret[1] = kr_FGM_tmp;
   ret[2] = kthe_FGM_tmp;
-
+  return;
 }
