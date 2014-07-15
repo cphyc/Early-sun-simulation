@@ -51,9 +51,9 @@ void set_ranges() {
 
   // Omega range and dlnOmegadlnr_range
   for (int n = 0; n < NOMEGA; n++)
-    simul::Omega_range[n] = 31./NOMEGA*simul::OmegaSun*n;
+    simul::Omega_range[n] = 30.*(n+1)/NOMEGA;
   for (int n = 0; n < NDOMEGA; n++)
-    simul::dlnOmegadlnr_range[n] = -2.5/NDOMEGA*n;
+    simul::dlnOmegadlnr_range[n] = -2.5*(n+1)/NDOMEGA;
 }
 
 /* Modifies the position to the next position in the list and return True
@@ -143,7 +143,7 @@ void manager_code(int numprocs){
     /* Fetch back the omega rank and the sender.*/
     sender  = status.MPI_SOURCE;
     /* om_index is in the first SHIFT bits on the left */
-    om_index_ret = status.MPI_TAG >> SHIFT;
+    om_index_ret  = status.MPI_TAG >> SHIFT;
     /* dom_index is on the first SHIFT bits on the right */
     dom_index_ret = status.MPI_TAG % ( 1 << SHIFT );
     
@@ -152,12 +152,12 @@ void manager_code(int numprocs){
 	     sender);
     }
     else if (verbosity == 2){ 
-      printf("%.2f%%", (NOMEGA*posOmega + posdOmega) * 100. / (NOMEGA*NDOMEGA));
+      printf("%2.2f%%", (NOMEGA*posOmega + posdOmega - 1) * 100. / (NOMEGA*NDOMEGA));
       std::cout << std::endl;
     }
 
     /* Store the answer in our array */
-    FGM[om_index_ret][dom_index_ret] = ret[0];
+    FGM   [om_index_ret][dom_index_ret] = ret[0];
     kR_FGM[om_index_ret][dom_index_ret] = ret[1];
     kZ_FGM[om_index_ret][dom_index_ret] = ret[2];
 
@@ -207,8 +207,7 @@ void manager_code(int numprocs){
 void worker_code(void) {
   MPI_Status status;
   int rank;
-  double Omega, dOmega;
-  double FGM;
+  double Omega, dlnOmegadlnr;
   int om_index, dom_index;
   int index[2];
   unsigned int flag;
@@ -233,11 +232,11 @@ void worker_code(void) {
     /* Call the get_FGM function that finds the fastest 
        growing mode at a given Omega by looping over dOmega */
     Omega  = simul::Omega_range[om_index];
-    dOmega = simul::dlnOmegadlnr_range[dom_index];
+    dlnOmegadlnr = simul::dlnOmegadlnr_range[dom_index];
     if (verbosity == 1)
-      printf("W%d: working on %d - %d (%e - %e)\n", rank, om_index, dom_index, Omega, dOmega);
+      printf("W%d: working on %d - %d (%e - %e)\n", rank, om_index, dom_index, Omega, dlnOmegadlnr);
     
-    get_FGM(Omega, dOmega, ret);
+    get_FGM(Omega, dlnOmegadlnr, ret);
 
     /* l-t-r :  SHIFT bits for om_index _  SHIFT bits for dom_index
        ex : nOmega = 5, ndOmega = 10, SHIFT = 8
@@ -267,9 +266,9 @@ void worker_code(void) {
 }
 
 void print_array(double FGM[NOMEGA][NDOMEGA]){
-  for (int i = 0; i < NOMEGA; i++) {
-    for (int j = 0; j < NDOMEGA; j++) {
-      std::cout << FGM[i][j] << "\t";
+  for (int j = 0; j < NDOMEGA; j++) {
+    for (int i = 0; i < NOMEGA; i++) {
+      printf("%2.6e\t", FGM[i][j]);
     }
     std::cout << std::endl;
   }
