@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-const int NOMEGA = 5, NDOMEGA = 5, NK = 500;
+const int NOMEGA = 25, NDOMEGA = 25, NK = 500;
 
 namespace simul {
   extern bool verbose, vverbose;

@@ -1,36 +1,34 @@
 #include <cmath>
 #include "simul_constants.hpp"
-
+#define USE_RG
 #ifdef USE_RG
 // Red giant parameters
 namespace simul {
+  //nu = 3.52e+02 	 eta = 6.51e+02  xi = 2.90e+16 	 r = 7.47e-01 	 gamma = 1.67e+00
+  //rho = 9.01e-02 	 T = 3.29e+06 	 N^2_mean = 1.58e-07   	 H = 4.80e-01
   bool verbose = true, vverbose = false;
 
   // Constants
   double pi			= 3.1592653589793238462643383279502881971693;
   double Rsun			= 6.96e10;         //  cm
-  double OmegaSun		= 2.7e-6;      //  s⁻¹
+  double OmegaSun		= 2.7e-6;          //  s⁻¹
   double Rgas			= 8.314e7;         //  erg.K⁻¹.mol⁻¹
-  double Msun			= 1.99e33;         //  g
+  double Msun			= 1.99e33;         //  g 
+  double theta                  = pi/4;
+  
+  double nu		 =   2.69e-14; // 3.52e2 cms
+  double eta		 =   4.98e-14; // 6.51e2 cms
+  double xi		 =   2.22e0 ; // 2.90e16 cms
+  double r		 =   7.47e-1;
+  double gamma		 =   1.67e0;
+  double rho		 =   9.01e2;
+  double T		 =   3.29e6;
+  double N2		 =   2.15e4; // 1.57e-7 cms
+  double H_pressure	 =  4.80e-1;
 
-  // set the parameters @ t	= 4.7e9yr:
-  // Optional if using pressure scale
-  // double g	= 1000;         //  cgs (taken at the surface)
-  double nu		= 5.69;         //  cm².s⁻¹
-  double eta		= 496;          //  cm².s⁻¹
-  double xi		= 1.78e17;      //  cm².s⁻¹
-  double r		= 2.07*Rsun;    //  cm
-  double theta          = pi/4;         //  rda
-  double R              = r*cos(theta); //  cm
-  double gamma		= 1.63;         //  
-  double rho		= 4.61e2;       //  g.cm⁻³
-  double T		= 2.62e7;       //  K
   double B_theta	= 0;            //  Gauss (cgs)
   double v_a_theta      = B_theta/sqrt(4*pi*rho);
                                         // B_theta / np.sqrt(4*pi*rho)
-                                        //  cm.s⁻¹
-  double N2             = 2.22e-2;      //  s⁻²
-  double H_pressure     = 3.79e-3*Rsun; //  cm
 
   // k ranges
   //double lmax = Rgas*T/g;            //  cm
