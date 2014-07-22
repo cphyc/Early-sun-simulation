@@ -150,7 +150,7 @@ void loop(double FGMs[NOMEGA][NDOMEGA], double Omega_range[], double dlnOmegadln
 
 void get_FGM(double Omega, double dlnOmegadlnr, double* ret) {
   double local_FGM = 0, FGM = 0;
-  double kr_FGM_tmp, kthe_FGM_tmp;
+  double kr_FGM_tmp = 0, kthe_FGM_tmp = 0;
   double kr, kthe;
   double polynomial[6];
   int order, nroots;
