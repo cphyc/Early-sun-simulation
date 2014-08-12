@@ -18,7 +18,7 @@ namespace simul {
   
   double nu		 =   2.69e-14; // 3.52e2 cms
   double eta		 =   4.98e-14; // 6.51e2 cms
-  double xi		 =   2.22e0 ; // 2.90e16 cms
+  double xi		 =   7.64e-9 ; // 2.90e16 cms
   double r		 =   7.47e-1;
   double gamma		 =   1.67e0;
   double rho		 =   9.01e2;
