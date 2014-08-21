@@ -53,7 +53,7 @@ void set_ranges() {
   for (int n = 0; n < NOMEGA; n++)
     simul::Omega_range[n] = 30.*(n+1)/NOMEGA;
   for (int n = 0; n < NDOMEGA; n++)
-    simul::dlnOmegadlnr_range[n] = -2.5*(n+1)/NDOMEGA;
+    simul::dlnOmegadlnr_range[n] = -20*(n+1)/NDOMEGA;
 }
 
 /* Modifies the position to the next position in the list and return True
